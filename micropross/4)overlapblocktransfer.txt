@@ -1,0 +1,119 @@
+section .data 
+
+sblock db 11h,12h,13h,14h,15h
+
+dblock times 5 db 0 
+
+smsg db 10,"sourcr block "
+smsglen equ $-smsg 
+
+dmsg db 10,"destintion block "
+dmsglen equ $-dmsg 
+
+
+
+section .bss
+char_ans resb 2 
+
+%macro print 2 
+mov rax,1
+mov rdi,1 
+mov rsi,%1 
+mov rdx,%2 
+syscall 
+%endmacro 
+
+%macro exit 0 
+mov rax,60 
+mov rdi,0 
+syscall
+%endmacro
+
+
+
+section .text  
+global _start
+_start: 
+print smsg,smsglen
+mov rsi,sblock
+call block_disply
+
+print dmsg,dmsglen
+mov rsi,dblock-2 
+call block_disply
+
+call block_transf 
+
+print smsg,smsglen
+mov rsi,sblock 
+call block_disply
+
+print dmsg,dmsglen
+mov rsi,dblock-2 
+call block_disply
+
+
+exit 
+
+
+
+block_transf: 
+mov rsi,sblock+4 
+mov rdi,dblock+2 
+mov rcx,5 
+
+back: 
+
+mov al,[rsi]
+mov [rdi],al 
+
+dec rsi
+dec rdi 
+
+dec rcx 
+jnz back 
+ret 
+
+
+block_disply: 
+mov rbp,5 
+
+backk: 
+mov al,[rsi]
+push rsi 
+call display 
+
+pop rsi
+inc rsi 
+dec rbp 
+jnz backk
+ret 
+
+
+display: 
+mov rbx,16 
+mov rcx,2 
+mov rsi,char_ans+1 
+
+bacck:
+
+mov rdx,0 
+div rbx 
+
+cmp dl,09h
+jbe add30 
+add dl,07h
+
+add30:
+add dl,30h 
+mov [rsi],dl 
+dec rsi 
+dec rcx
+jnz bacck
+
+print char_ans,2 
+ret 
+
+
+
+

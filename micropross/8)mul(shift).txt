@@ -1,0 +1,183 @@
+section .data
+n1msg db 10,"enter first number "
+n1msg_len equ $-n1msg 
+
+n2msg db 10,"enter second number "
+n2msg_len equ $-n2msg 
+
+sams db 10,"mul by suss" 
+sams_len equ $-sams
+
+emsg db 10,"invalid input "
+emsg_len equ $-emsg 
+
+
+section .bss 
+
+buf resb 5 
+buf_len equ $-buf
+
+char_ans resb 8 
+
+n1 resw 1 
+n2 resw 1 
+
+ans resd 1 
+ 
+
+%macro print 2 
+mov rax,1 
+mov rdi,1 
+mov rsi,%1 
+mov rdx,%2 
+syscall
+%endmacro 
+
+%macro read 2 
+mov rax,0  
+mov rdi,0 
+mov rsi,%1 
+mov rdx,%2 
+syscall
+%endmacro
+
+%macro exit 0 
+mov rax,60 
+mov rdi,0 
+syscall
+%endmacro
+
+
+section .text 
+
+global _start
+_start:
+call sa 
+
+exit 
+
+sa:
+mov word[ans],0 
+
+
+print n1msg,n1msg_len
+
+call accept 
+
+mov [n1],bx 
+
+print n2msg,n2msg_len
+call accept
+mov [n2],bx
+
+mov ax,[n1]
+mov bx,[n2]
+cmp ax,0 
+je final
+
+cmp bx,0 
+je final
+
+mov cx,16 
+xor ebp,ebp
+
+back:
+shl ebp,1
+shl ax,1
+jnc next
+add ebp,ebx 
+
+
+next:
+loop back
+;dec cx 
+;jnz back
+final:
+print sams,sams_len
+
+mov eax,ebp
+call display 
+
+
+
+ret 
+
+
+
+accept: 
+read buf,5 
+mov rcx,4 
+mov rsi,buf 
+mov bx,0 
+
+next_byte:
+shl bx,4 
+mov al,[rsi]
+
+cmp al,'0'
+jb error
+
+cmp al,'9'
+jbe sub30
+
+;cmp al,'A'
+;jb error
+
+;cmp al,'F'
+;jbe sub37 
+
+;cmp al,'a'
+;jb error
+;cmp al,'f'
+;jbe sub57
+error:
+
+print emsg,emsg_len
+
+
+;sub57:
+;sub al,20h
+
+;sub37:
+;sub al,07h
+
+sub30:
+sub al,30h
+
+add bx,ax
+
+inc rsi
+dec rcx 
+jnz next_byte
+ret 
+
+
+
+
+
+display: 
+mov rbx,16 
+mov rcx,8
+mov rsi,char_ans+7
+
+backk:
+mov rdx,0 
+div rbx 
+
+cmp dl,09h 
+jbe add30 
+add dl,07h 
+
+add30:
+add dl,30h 
+
+mov [rsi],dl 
+dec rsi 
+dec rcx 
+jnz backk
+
+print char_ans,8 
+
+ret 
+
+

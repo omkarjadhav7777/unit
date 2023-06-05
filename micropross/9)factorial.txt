@@ -1,0 +1,144 @@
+section .data
+msg db 10,"Enter number:"
+msg_len equ $-msg
+
+msg1 db 10,"factorial is :  "
+msg1_len equ $-msg1
+emsg db 10,"invalid hex"
+emsgl equ $-emsg
+
+%macro print 2
+mov rax,1      ;system call 1 write
+mov rdi,1    ;file handle 1 stdout
+mov rsi,%1
+mov rdx,%2
+syscall
+%endmacro
+
+
+%macro read 2
+mov rax,0
+mov rdi,0
+mov rsi,%1
+mov rdx,%2
+syscall
+%endmacro
+
+%macro exit 0
+mov rax,60
+mov rdi,0
+syscall
+%endmacro
+
+section .bss
+buf resb 5
+ans resb 2
+factorial resw 1
+char_ans resb 4
+
+section .text
+global _start
+_start: 
+
+print msg,msg_len
+call accept_16
+mov cx,bx
+mov word[factorial],1
+
+call facto
+print msg1,msg1_len
+mov ax,word[factorial]
+call display
+
+exit
+
+facto:
+push rcx
+cmp rcx,1
+je next
+
+
+
+
+
+recursion:
+dec rcx
+call facto
+
+next:
+pop rcx
+mov rax,rcx
+mul word[factorial]
+mov word[factorial],ax
+
+ret
+
+
+accept_16:
+read buf,5
+mov rcx,4
+xor bx,bx
+mov rsi,buf
+next1:
+shl bx,4
+mov al,[rsi]
+
+cmp al,'0'
+jb error
+cmp al,'9'
+jbe sub30
+
+
+cmp al,'A'
+jb error
+cmp al,'F'
+jbe sub37
+
+
+cmp al,'a'
+jb error
+cmp al,'f'
+jbe sub57
+
+
+
+
+
+sub57:sub al,20h
+sub37:sub al,07h
+sub30:sub al,30h
+
+add bx,ax
+
+inc rsi
+dec rcx
+jnz next1
+
+ret
+error:
+print emsg,emsgl
+exit
+
+display:
+
+mov rbx,10
+mov rsi,char_ans+3
+mov rcx,4
+back:
+mov rdx,0
+div rbx
+cmp dl,09h
+jbe add30
+
+
+add30:
+add dl,30h
+
+mov [rsi],dl
+dec rsi
+dec rcx
+jnz back
+
+print char_ans,4
+
+ret

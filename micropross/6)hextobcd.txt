@@ -1,0 +1,108 @@
+section .data 
+
+msg db 10,"enter hex number "
+msglen equ $-msg 
+
+msg2 db 10,"equivalent bcd number "
+msg2len equ $-msg2
+
+er db 10,"error "
+erl equ $-er 
+
+section .bss 
+char_ans resb 1 
+buf resb 5
+
+%macro print 2 
+mov rax,1 
+mov rdi,1 
+mov rsi,%1 
+mov rdx,%2 
+syscall 
+%endmacro
+
+%macro read 2 
+mov rax,0 
+mov rdi,0 
+mov rsi,%1 
+mov rdx,%2 
+syscall
+%endmacro
+
+%macro exit 0 
+mov rax,60 
+mov rdi,0 
+syscall
+%endmacro
+
+
+
+section .text 
+global _start
+
+_start:
+
+call hextobcd 
+exit
+
+hextobcd:
+print msg,msglen
+call accept
+
+mov ax,bx  
+mov bx,10 
+mov bp,0 
+
+
+back:
+mov dx,0 
+div bx 
+push dx 
+inc bp 
+
+cmp ax,0 
+jne back
+print msg2,msg2len
+bakk:
+pop dx
+
+add dl,30h
+mov [char_ans],dl 
+print char_ans,1 
+dec bp
+jnz bakk
+
+ret 
+
+
+accept:
+read buf,5
+mov bx,0
+mov rcx,4
+mov rsi,buf
+
+
+next_byte: 
+shl bx,4
+
+mov al,[rsi]
+cmp al,'0'
+jb error 
+
+cmp al,'9'
+jbe sub30 
+
+sub30:
+sub al,30h
+
+add bx,ax 
+inc rsi
+dec rcx
+jnz next_byte
+
+
+error:
+print er,erl
+ret 
+
+

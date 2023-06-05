@@ -1,0 +1,106 @@
+section .data 
+msg db 10,"enter bcd number "
+msglen equ $-msg 
+
+msg2 db 10,"equivalent hex number is "
+msg2len equ $-msg2 
+
+
+section .bss 
+char_ans resb 4 
+buf resb 6 
+ans resw 1 
+
+%macro print 2 
+mov rax,1 
+mov rdi,1 
+mov rsi,%1 
+mov rdx,%2 
+syscall
+%endmacro
+
+%macro read 2 
+mov rax,0 
+mov rdi,0 
+mov rsi,%1 
+mov rdx,%2 
+syscall
+%endmacro
+
+%macro exit 0 
+mov rax,60 
+mov rdi,0 
+syscall
+%endmacro
+
+
+
+section .text 
+global _start 
+_start:
+
+call bcdtohex
+
+exit
+
+bcdtohex:
+print msg,msglen
+read buf,6 
+mov rsi,buf 
+mov rbp,5 
+mov rbx,10 
+mov ax,0 
+
+back: 
+
+mov cl,[rsi]
+sub cl,30h
+mul bx 
+
+add al,cl 
+
+inc rsi 
+dec rbp
+jnz back 
+
+mov [ans],al 
+
+print msg2,msg2len
+
+mov al,[ans]
+
+call display 
+
+ret 
+
+
+display: 
+mov rbx,16 
+mov rcx,4 
+mov rsi,char_ans+3 
+
+backk:
+mov rdx,0 
+div rbx
+
+cmp dl,09h
+jbe add30 
+add dl,07 
+
+add30:
+add dl,30h
+mov [rsi],dl 
+dec rsi
+dec rcx
+jnz backk
+
+print char_ans,4 
+ret 
+
+
+
+
+
+
+
+

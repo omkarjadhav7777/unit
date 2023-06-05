@@ -1,0 +1,120 @@
+section .data
+
+array dq -10h,11h,-15h,-30h,70h 
+
+n equ 5 
+
+
+msg db 10,"positive count "
+msglen equ $-msg 
+
+msg2 db 10,"negative count "
+msg2len equ $-msg2 
+
+
+
+section .bss 
+p_count resq 1 
+n_count resq 1 
+char_ans resb 2 
+
+
+%macro print 2 
+mov rax,1 
+mov rdi,1 
+mov rsi,%1 
+mov rdx,%2 
+syscall 
+%endmacro 
+
+%macro read 2 
+mov rax,0 
+mov rdi,0 
+mov rsi,%1 
+mov rdx,%2 
+syscall
+%endmacro 
+
+%macro exit 0 
+mov rax,60 
+mov rdi,0 
+syscall
+%endmacro 
+
+
+
+
+section .text 
+global _start
+_start: 
+
+mov rsi,array
+mov rcx,n 
+
+mov rbx,0 
+mov rdx,0 
+back: 
+mov rax,[rsi]
+
+shl rax,1 
+jc negative
+
+positive:
+inc rbx
+jmp next 
+
+negative:
+inc rdx 
+
+next: 
+add rsi,8 
+dec rcx
+jnz back 
+
+mov [p_count],rbx
+mov [n_count],rdx 
+
+print msg,msglen
+
+mov rax,[p_count]
+call display
+
+print msg2,msg2len
+
+mov rax,[n_count]
+call display
+
+exit 
+
+
+display:
+mov rbx,16
+mov rcx,2
+mov rsi,char_ans+1 
+
+backk:
+mov rdx,0 
+div rbx 
+
+cmp dl,09h
+jbe add30 
+
+add dl,07h
+
+add30: 
+
+add dl,30h 
+
+mov [rsi],dl 
+dec rsi
+dec rcx
+jnz backk
+print char_ans,2 
+ret
+ 
+
+
+
+
+
+
